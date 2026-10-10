@@ -1,5 +1,7 @@
 # Contexto inicial
 
+> Las secciones I a III son la conversación original con la que nació el tablero y se conservan como historia; parte de lo que dicen ya cambió (por ejemplo, ya no hay 7 escenarios y el archivo se llama `Dashboard-TCC.html`). **El estado vigente y las instrucciones para trabajar con una IA están en la sección IV, al final.**
+
 **I. comoces tcc?**
 Sí. En Colombia, **TCC** suele referirse a la empresa de logística y mensajería (Transportadora Comercial Colombia). Hace envíos de paquetes y carga a nivel nacional, ofrece servicios de logística para empresas (almacenamiento, distribución, e-commerce) y tiene puntos de atención en muchas ciudades. Desde su página web puedes rastrear guías, cotizar envíos y buscar oficinas.
 
@@ -73,3 +75,67 @@ Ya está la plantilla **Recorrido de la remesa**. Es un tablero animado en el qu
 Si un escenario usa un camino que no existe, el propio tablero muestra un aviso.
 
 Todo el contenido actual es de ejemplo. Cuando quieras, pásame la operación real de TCC: etapas, estados de guía, novedades y los módulos de su software en cada paso. Puede ser en lista, en un documento o como lo tengas, y lo voy incorporando. La página publicada es privada hasta que la compartas, y el archivo `recorrido-remesa.html` lo puedes abrir sin conexión o enviar por correo.
+
+---
+
+# IV. Contexto vigente para continuar con una IA
+
+Esta sección es para quien retome el trabajo con un asistente de IA (Claude Code u otro). Pídele que lea este archivo y el `README.md` antes de hacer cambios.
+
+## Quiénes somos y qué es esto
+
+- Somos **Softcaribbean**, proveedor de software de **TCC** (transportadora colombiana de paquetería y mensajería): desarrollo, soporte y mejoras sobre sus sistemas.
+- `Dashboard-TCC.html` es un tablero animado que muestra el recorrido de una remesa etapa por etapa.
+- **Objetivo real:** que un desarrollador pueda crear una remesa y llevarla al estado que necesita (por ejemplo, dejarla planeada) sin apoyo de QA. Por eso lo más importante de cada etapa es **el estado que toma la remesa** y **el módulo del sistema por donde hay que pasarla para que cambie de estado**.
+- Lo leen desarrolladores del equipo, no el cliente final.
+
+## Decisiones ya tomadas (no volver a discutirlas)
+
+- **Un solo archivo HTML**, sin servidor, sin compilación y sin librerías externas. Lo único que se carga de internet son las fuentes de Google Fonts.
+- **Datos separados del dibujo:** la lógica de negocio vive en el objeto `FLUJO`; el motor la dibuja y la anima. Para crecer se editan datos.
+- **Estilo sobrio:** fondo neutro, un solo color de acento (ámbar), modo claro y oscuro, adaptable a celular. Sin efectos recargados.
+- **Solo el flujo estándar por ahora.** Se quitaron a propósito los demás escenarios de ejemplo (reintento, retenida en oficina, dirección corregida, devolución, contraentrega, envío desde oficina) para que el estándar sirva de plantilla y los flujos reales se implementen bien, uno por uno, con todas sus bifurcaciones.
+- **Estado y módulo destacados:** en el detalle de la etapa hay dos recuadros, «Estado de la remesa» (letra grande, con el estado anterior debajo) y «Módulo donde cambia de estado». El módulo se muestra con borde punteado mientras valga «Por definir».
+
+## Qué es real y qué es de ejemplo
+
+| Dato | Situación |
+|------|-----------|
+| Secuencia general del flujo estándar | Típica de una transportadora de paquetería. **No está validada** contra la operación de TCC. |
+| Nombres de los estados (`GUÍA GENERADA`, `RECOLECTADA`, …) | **De ejemplo.** No son los del sistema de TCC. |
+| Módulos | Todos en `MODULO_POR_DEFINIR` («Por definir»). |
+| Responsables, tiempos, eventos, remesa de muestra | De ejemplo. |
+
+## Reglas para la IA
+
+1. **No inventes lógica de negocio de TCC.** Estados, módulos, novedades y reglas deben venir de quien conoce la operación, del código fuente o de la documentación interna. Si falta un dato, pregunta o déjalo como «Por definir»; nunca lo rellenes con algo verosímil.
+2. **Distingue lo confirmado de lo supuesto** al responder y al escribir en el tablero.
+3. **Edita datos, no el motor.** Lo normal es tocar solo la sección «LÓGICA DE NEGOCIO». El motor se cambia únicamente cuando hace falta una capacidad nueva, y se explica por qué.
+4. **Respeta el formato de un solo archivo** y no agregues dependencias ni pasos de compilación.
+5. **El archivo es un fragmento:** empieza en `<title>` y no tiene `<!doctype>`, `<html>` ni `<body>`. Nació como página publicable y así se conserva; no lo «arregles» sin que se pida.
+6. **Todo en español**, incluidos nombres de claves, comentarios y textos visibles, como está hoy.
+7. **Verifica antes de dar por terminado:** que el script no tenga errores de sintaxis y que al abrir el tablero no aparezca el aviso «Revisa los datos del flujo». Si no pudiste abrirlo en un navegador, dilo.
+8. **Mantén al día el `README.md`** (tabla «Estado actual») y esta sección cuando cambie lo que es real, lo pendiente o una decisión.
+
+## Cómo pedirle un flujo nuevo a la IA
+
+Entre más completo el insumo, menos supone la IA. Para cada flujo o bifurcación, entrégale:
+
+- **Nombre del flujo** y en qué punto se separa del estándar.
+- **Pasos en orden.** Para cada uno:
+  - qué ocurre y quién lo hace;
+  - **estado anterior y estado nuevo** de la remesa, con el nombre exacto del sistema;
+  - **módulo, pantalla u opción de menú** donde se ejecuta el cambio;
+  - condiciones o datos previos necesarios (por ejemplo, que la remesa ya esté planeada o en un manifiesto);
+  - qué se registra (eventos, evidencias).
+- **Cómo termina** el flujo y si vuelve a unirse al estándar.
+
+Ejemplo de petición: «Agrega el flujo de destinatario ausente. Se separa en reparto. Pasos: … Estados: … Módulos: …».
+
+## Pendientes conocidos
+
+- Reemplazar los estados de ejemplo por los reales de TCC.
+- Definir el módulo de cada etapa.
+- Documentar la **planeación de la remesa**: qué es, en qué estado deja la remesa y en qué módulo se hace. Es el caso de uso que motivó el tablero.
+- Agregar las bifurcaciones reales: novedades, reintentos, devolución, contraentrega, envío desde oficina y las que tenga la operación.
+- Evaluar si cada paso necesita un campo de «requisitos previos» o «cómo hacerlo» para que el desarrollador pueda reproducirlo sin ayuda.

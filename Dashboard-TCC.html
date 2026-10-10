@@ -143,10 +143,24 @@ h1{font-family:var(--f-display);font-weight:760;font-stretch:80%;font-size:clamp
 .campos div{min-width:0}
 .campos dt{font:500 10.5px var(--f-mono);letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
 .campos dd{margin:4px 0 0;font-weight:500}
-.pill{display:inline-block;font:600 12px var(--f-mono);letter-spacing:.04em;padding:3px 8px;border-radius:5px;background:var(--surface-2);border:1px solid var(--line);color:var(--ink)}
-.pill[data-tono="ok"]{background:var(--ok-soft);color:var(--ok);border-color:transparent}
-.pill[data-tono="novedad"]{background:var(--warn-soft);color:var(--warn);border-color:transparent}
-.pill[data-tono="alerta"]{background:var(--crit-soft);color:var(--crit);border-color:transparent}
+/* Estado de la remesa y módulo donde cambia */
+.cambio{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);gap:12px;margin-top:6px}
+.cambio > div{min-width:0;border-radius:10px;padding:12px 16px;display:grid;gap:5px;align-content:start}
+.cambio-rot{font:500 10.5px var(--f-mono);letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+.estado-caja{background:var(--accent-soft);border:1px solid var(--accent)}
+.estado-val{font-family:var(--f-display);font-weight:740;font-stretch:84%;font-size:clamp(20px,2.2vw,26px);line-height:1.1;letter-spacing:.01em;color:var(--accent-strong);overflow-wrap:anywhere}
+.estado-previo{font:500 12px var(--f-mono);color:var(--muted)}
+.estado-caja[data-tono="ok"]{background:var(--ok-soft);border-color:var(--ok)}
+.estado-caja[data-tono="ok"] .estado-val{color:var(--ok)}
+.estado-caja[data-tono="novedad"]{background:var(--warn-soft);border-color:var(--warn)}
+.estado-caja[data-tono="novedad"] .estado-val{color:var(--warn)}
+.estado-caja[data-tono="alerta"]{background:var(--crit-soft);border-color:var(--crit)}
+.estado-caja[data-tono="alerta"] .estado-val{color:var(--crit)}
+.modulo-caja{background:var(--surface-2);border:1.5px solid var(--line-strong)}
+.modulo-val{font-family:var(--f-display);font-weight:720;font-stretch:86%;font-size:clamp(18px,2vw,22px);line-height:1.15;overflow-wrap:anywhere}
+.modulo-nota{font-size:12px;color:var(--muted)}
+.modulo-caja[data-pendiente="true"]{border-style:dashed}
+.modulo-caja[data-pendiente="true"] .modulo-val{color:var(--muted)}
 .eventos{padding:20px 22px;display:grid;gap:4px;align-content:start}
 .eventos h3{font-family:var(--f-display);font-weight:700;font-stretch:88%;font-size:19px}
 .eventos .sub{color:var(--muted);font-size:13px}
@@ -180,7 +194,7 @@ pre code{background:none;padding:0}
   .estado-rep{margin-left:0;width:100%}
 }
 @media (max-width:520px){
-  .campos{grid-template-columns:minmax(0,1fr)}
+  .campos,.cambio{grid-template-columns:minmax(0,1fr)}
   .btn .txt{display:none}
   .btn.primario .txt{display:inline}
   .btn.primario{min-width:0}
@@ -196,7 +210,7 @@ pre code{background:none;padding:0}
     <div class="titulo">
       <p class="eyebrow">TCC · Mensajería y paquetería</p>
       <h1>Recorrido de la remesa</h1>
-      <p class="lead">Cómo se mueve un paquete desde la casa del remitente hasta la del destinatario, etapa por etapa, según el escenario que elijas.</p>
+      <p class="lead">Cómo se mueve un paquete desde la casa del remitente hasta la del destinatario, etapa por etapa: qué estado toma la remesa en cada una y en qué módulo se hace el cambio.</p>
     </div>
     <aside class="rotulo" aria-label="Remesa de ejemplo">
       <div class="rotulo-top"><span>Remesa de ejemplo</span><span id="r-guia"></span></div>
@@ -251,10 +265,20 @@ pre code{background:none;padding:0}
       <p class="eyebrow" id="etapa-eyebrow"></p>
       <h2 id="etapa-titulo"></h2>
       <p id="etapa-desc"></p>
+      <div class="cambio">
+        <div class="estado-caja" id="estado-caja">
+          <span class="cambio-rot">Estado de la remesa</span>
+          <strong class="estado-val" id="f-estado"></strong>
+          <span class="estado-previo" id="f-previo"></span>
+        </div>
+        <div class="modulo-caja" id="modulo-caja">
+          <span class="cambio-rot">Módulo donde cambia de estado</span>
+          <strong class="modulo-val" id="f-modulo"></strong>
+          <span class="modulo-nota">Por aquí debe pasar la remesa para tomar este estado</span>
+        </div>
+      </div>
       <dl class="campos">
         <div><dt>Responsable</dt><dd id="f-actor"></dd></div>
-        <div><dt>Sistema / módulo</dt><dd id="f-sistema"></dd></div>
-        <div><dt>Estado de la guía</dt><dd><span class="pill" id="f-estado"></span></dd></div>
         <div><dt>Tiempo típico</dt><dd id="f-tiempo"></dd></div>
       </dl>
     </article>
@@ -274,12 +298,13 @@ pre code{background:none;padding:0}
       <dl>
         <div><dt>Agregar una etapa</dt><dd>Un nodo nuevo en <code>nodos</code>, con su posición, nombre e ícono.</dd></div>
         <div><dt>Conectar caminos</dt><dd>En <code>conexiones</code>, de qué etapa a qué etapa puede pasar una remesa.</dd></div>
-        <div><dt>Describir lo que ocurre</dt><dd>En <code>pasos</code>, el texto, responsable, sistema, estado, tiempo y eventos de cada etapa.</dd></div>
+        <div><dt>Describir lo que ocurre</dt><dd>En <code>pasos</code>, el texto, responsable, estado que toma la remesa, módulo donde cambia, tiempo y eventos de cada etapa.</dd></div>
         <div><dt>Crear un escenario</dt><dd>En <code>escenarios</code>, la lista de pasos en orden. Se pueden reutilizar pasos y cambiar solo lo que difiere.</dd></div>
       </dl>
-      <p class="nota">Etapas, sistemas, estados y tiempos son datos de ejemplo para ajustar con la operación real.</p>
+      <p class="nota">Por ahora solo está el flujo estándar, como ejemplo. Etapas, estados y tiempos son datos de muestra, y los módulos están «Por definir» hasta documentar la operación real.</p>
     </div>
     <div>
+      <p class="nota">Ejemplo de cómo se agregaría una bifurcación:</p>
       <pre><code><span class="k">escenarios</span>: [{
   id: 'direccion',
   nombre: 'Dirección corregida',
@@ -305,10 +330,16 @@ pre code{background:none;padding:0}
 // Tramo que comparten casi todos los escenarios (de la solicitud al reparto)
 const TRAMO_COMUN = ['solicitud','recoleccion','admision','clasificacion','troncal','terminal_dest','reparto'];
 
+// Nombre provisional del módulo mientras se documenta el real de cada etapa
+const MODULO_POR_DEFINIR = 'Por definir';
+
 const FLUJO = {
   remesa: { guia:'7340 0012 5589', origen:'Bogotá · Chapinero', destino:'Medellín · Laureles', contenido:'1 caja · 4,2 kg' },
 
-  // Franjas de fondo del mapa (coordenadas x del lienzo de 1240 × 460)
+  // Alto del lienzo del mapa (el ancho es 1240). Súbelo cuando agregues bifurcaciones arriba o abajo de la línea principal
+  lienzo: { alto:300 },
+
+  // Franjas de fondo del mapa (coordenadas x del lienzo)
   carriles: [
     { nombre:'Origen',           x0:20,  x1:355 },
     { nombre:'Terminal origen',  x0:355, x1:625 },
@@ -319,153 +350,72 @@ const FLUJO = {
 
   // Etapas del mapa. pos = dónde va el nombre: below (defecto), above, left, right
   nodos: {
-    remitente:      { x:150,  y:220, label:['Casa del','remitente'],     icono:'casa',       pos:'left' },
-    oficina_origen: { x:290,  y:105, label:['Oficina o','punto aliado'], icono:'tienda',     pos:'above' },
-    recoleccion:    { x:290,  y:220, label:['Recolección','a domicilio'],icono:'camion' },
-    admision:       { x:430,  y:220, label:['Admisión','y pesaje'],      icono:'caja' },
-    clasificacion:  { x:560,  y:220, label:['Clasificación','por destino'], icono:'clasificar' },
-    troncal:        { x:690,  y:220, label:['Transporte','troncal'],     icono:'ruta' },
-    devolucion:     { x:690,  y:380, label:['Logística','inversa'],      icono:'devolver' },
-    terminal_dest:  { x:820,  y:220, label:['Terminal','destino'],       icono:'bodega' },
-    reparto:        { x:960,  y:220, label:['Reparto','última milla'],   icono:'furgon',     pos:'above' },
-    novedad:        { x:960,  y:370, label:['Gestión de','novedades'],   icono:'alerta' },
-    destinatario:   { x:1100, y:220, label:['Casa del','destinatario'],  icono:'casa',       pos:'right' },
-    oficina_dest:   { x:1100, y:370, label:['Oficina','destino'],        icono:'edificio' },
-    liquidacion:    { x:1100, y:105, label:['Liquidación','de recaudo'], icono:'dinero',     pos:'above' }
+    remitente:      { x:150,  y:150, label:['Casa del','remitente'],     icono:'casa',       pos:'left' },
+    recoleccion:    { x:290,  y:150, label:['Recolección','a domicilio'],icono:'camion' },
+    admision:       { x:430,  y:150, label:['Admisión','y pesaje'],      icono:'caja' },
+    clasificacion:  { x:560,  y:150, label:['Clasificación','por destino'], icono:'clasificar' },
+    troncal:        { x:690,  y:150, label:['Transporte','troncal'],     icono:'ruta' },
+    terminal_dest:  { x:820,  y:150, label:['Terminal','destino'],       icono:'bodega' },
+    reparto:        { x:960,  y:150, label:['Reparto','última milla'],   icono:'furgon' },
+    destinatario:   { x:1100, y:150, label:['Casa del','destinatario'],  icono:'casa',       pos:'right' }
   },
 
   // Caminos posibles. curva = cuánto se arquea la línea (positivo o negativo)
   conexiones: [
     { de:'remitente',      a:'recoleccion' },
-    { de:'remitente',      a:'oficina_origen' },
-    { de:'oficina_origen', a:'admision' },
     { de:'recoleccion',    a:'admision' },
     { de:'admision',       a:'clasificacion' },
     { de:'clasificacion',  a:'troncal' },
     { de:'troncal',        a:'terminal_dest' },
     { de:'terminal_dest',  a:'reparto' },
-    { de:'reparto',        a:'destinatario' },
-    { de:'reparto',        a:'novedad', curva:18 },
-    { de:'novedad',        a:'reparto', curva:18 },
-    { de:'novedad',        a:'oficina_dest' },
-    { de:'oficina_dest',   a:'destinatario' },
-    { de:'novedad',        a:'devolucion' },
-    { de:'devolucion',     a:'remitente', curva:-90 },
-    { de:'destinatario',   a:'liquidacion' }
+    { de:'reparto',        a:'destinatario' }
   ],
 
   // Qué ocurre en cada paso. tono: normal | ok | novedad | alerta
+  // estado = estado que toma la remesa en este paso · modulo = módulo del sistema donde se hace el cambio de estado
   pasos: {
     solicitud: { nodo:'remitente', titulo:'Solicitud de recolección',
       descripcion:'El remitente pide la recogida desde el portal, la app o la línea de servicio. El sistema crea la remesa, calcula la tarifa y genera el número de guía.',
-      actor:'Remitente · Servicio al cliente', sistema:'Portal de clientes · Generador de guías', estado:'GUÍA GENERADA', tiempo:'5 min',
+      actor:'Remitente · Servicio al cliente', modulo:MODULO_POR_DEFINIR, estado:'GUÍA GENERADA', tiempo:'5 min',
       eventos:['Registro de datos de origen, destino y contenido','Cálculo del flete por peso, volumen y destino','Asignación de guía y franja de recogida'] },
-    preparacion: { nodo:'remitente', titulo:'Preparación del envío',
-      descripcion:'El remitente empaca el producto y decide llevarlo él mismo a una oficina o punto aliado, sin esperar una recolección.',
-      actor:'Remitente', sistema:'Portal de clientes · Cotizador', estado:'SIN GUÍA', tiempo:'Variable',
-      eventos:['Cotización del envío en línea','Consulta de la oficina más cercana','Traslado del paquete al punto'] },
-    punto_venta: { nodo:'oficina_origen', titulo:'Admisión en oficina',
-      descripcion:'Un asesor recibe el paquete, lo pesa, cobra el flete y entrega la guía impresa. La remesa queda lista para el siguiente cargue hacia la terminal.',
-      actor:'Asesor de punto de venta', sistema:'POS de oficinas · Facturación', estado:'ADMITIDA EN OFICINA', tiempo:'10–15 min',
-      eventos:['Pesaje y revisión del empaque','Cobro del flete y emisión de la guía','Espera del cargue programado a terminal'] },
     recoleccion: { nodo:'recoleccion', titulo:'Recolección a domicilio',
       descripcion:'Un auxiliar llega a la dirección del remitente, verifica el paquete, lo rotula y registra la recogida desde su dispositivo móvil.',
-      actor:'Auxiliar de recolección', sistema:'App móvil de operación', estado:'RECOLECTADA', tiempo:'2–6 h según la ruta',
+      actor:'Auxiliar de recolección', modulo:MODULO_POR_DEFINIR, estado:'RECOLECTADA', tiempo:'2–6 h según la ruta',
       eventos:['Asignación de la recogida a una ruta','Lectura del código de barras de la guía','Firma y foto de evidencia del remitente'] },
     admision: { nodo:'admision', titulo:'Admisión en terminal origen',
       descripcion:'Se descarga el vehículo y cada unidad se pesa, se mide y se valida contra lo declarado en la guía.',
-      actor:'Operario de bodega', sistema:'WMS · Báscula y dimensionador', estado:'EN TERMINAL ORIGEN', tiempo:'1–3 h',
+      actor:'Operario de bodega', modulo:MODULO_POR_DEFINIR, estado:'EN TERMINAL ORIGEN', tiempo:'1–3 h',
       eventos:['Descargue y lectura de cada unidad','Peso y volumen reales frente a los declarados','Reliquidación del flete si hay diferencia'] },
     clasificacion: { nodo:'clasificacion', titulo:'Clasificación por destino',
       descripcion:'Las unidades se separan por ciudad y ruta, y se consolidan en el despacho que saldrá hacia la terminal destino.',
-      actor:'Operario de clasificación', sistema:'Clasificadora · Planeación de despachos', estado:'EN CLASIFICACIÓN', tiempo:'1–2 h',
+      actor:'Operario de clasificación', modulo:MODULO_POR_DEFINIR, estado:'EN CLASIFICACIÓN', tiempo:'1–2 h',
       eventos:['Lectura en la banda clasificadora','Asignación a muelle de salida','Inclusión en el manifiesto de carga'] },
     troncal: { nodo:'troncal', titulo:'Transporte troncal',
       descripcion:'Un vehículo de línea nacional viaja entre terminales con el manifiesto cerrado y seguimiento satelital durante el trayecto.',
-      actor:'Conductor de línea', sistema:'TMS · Monitoreo GPS', estado:'EN TRÁNSITO', tiempo:'8–24 h según trayecto',
+      actor:'Conductor de línea', modulo:MODULO_POR_DEFINIR, estado:'EN TRÁNSITO', tiempo:'8–24 h según trayecto',
       eventos:['Cierre y sellado del manifiesto','Salida del vehículo de la terminal','Reportes de posición en ruta'] },
     terminal_dest: { nodo:'terminal_dest', titulo:'Llegada a terminal destino',
       descripcion:'Se descarga el manifiesto, se concilian las unidades recibidas y cada remesa se asigna a una ruta de reparto.',
-      actor:'Operario de bodega destino', sistema:'WMS · Conciliación de manifiestos', estado:'EN TERMINAL DESTINO', tiempo:'2–4 h',
+      actor:'Operario de bodega destino', modulo:MODULO_POR_DEFINIR, estado:'EN TERMINAL DESTINO', tiempo:'2–4 h',
       eventos:['Descargue y conciliación contra manifiesto','Registro de faltantes o sobrantes','Asignación a ruta de reparto'] },
     reparto: { nodo:'reparto', titulo:'Salida a reparto',
       descripcion:'Un mensajero sale con la ruta optimizada del día. El destinatario recibe un aviso con la franja estimada de entrega.',
-      actor:'Mensajero de última milla', sistema:'Ruteo · App móvil · Notificaciones', estado:'EN REPARTO', tiempo:'2–8 h',
+      actor:'Mensajero de última milla', modulo:MODULO_POR_DEFINIR, estado:'EN REPARTO', tiempo:'2–8 h',
       eventos:['Optimización de la ruta por zona','Aviso al destinatario por SMS o correo','Llegada a la dirección de entrega'] },
     entrega: { nodo:'destinatario', titulo:'Entrega exitosa', tono:'ok',
       descripcion:'El destinatario recibe el paquete. El mensajero toma firma y foto como prueba de entrega y la guía se cierra.',
-      actor:'Destinatario · Mensajero', sistema:'App móvil · Prueba de entrega', estado:'ENTREGADA', tiempo:'5 min',
-      eventos:['Verificación de quien recibe','Firma digital y foto de evidencia','Cierre de la guía y aviso al remitente'] },
-    novedad_ausente: { nodo:'novedad', titulo:'Novedad: destinatario ausente', tono:'novedad',
-      descripcion:'El mensajero no encuentra a nadie en la dirección. Registra la novedad con evidencia y la remesa queda pendiente de gestión.',
-      actor:'Mensajero · Centro de novedades', sistema:'Gestión de novedades', estado:'NOVEDAD · AUSENTE', tiempo:'Gestión en 24 h',
-      eventos:['Registro del motivo con foto y ubicación','Aviso al destinatario y al remitente','Programación de un nuevo intento'] },
-    reintento: { nodo:'reparto', titulo:'Segundo intento de entrega',
-      descripcion:'La remesa sale de nuevo a reparto en la franja acordada con el destinatario.',
-      actor:'Mensajero de última milla', sistema:'Ruteo · Notificaciones', estado:'EN REPARTO · REINTENTO', tiempo:'Siguiente día hábil',
-      eventos:['Confirmación de la franja con el destinatario','Inclusión en la ruta del día','Llegada a la dirección de entrega'] },
-    oficina_dest: { nodo:'oficina_dest', titulo:'Disponible en oficina destino', tono:'novedad',
-      descripcion:'Agotados los intentos, la remesa queda en custodia en la oficina más cercana para que el destinatario la reclame dentro del plazo.',
-      actor:'Asesor de oficina', sistema:'POS de oficinas · Custodia', estado:'EN OFICINA PARA RECLAMAR', tiempo:'Plazo de custodia',
-      eventos:['Ingreso de la remesa a custodia','Aviso al destinatario con dirección y horario','Control del plazo de reclamo'] },
-    reclamo: { nodo:'destinatario', titulo:'Entregada en oficina', tono:'ok',
-      descripcion:'El destinatario se acerca a la oficina, presenta su documento y retira el paquete.',
-      actor:'Destinatario · Asesor de oficina', sistema:'POS de oficinas · Prueba de entrega', estado:'ENTREGADA EN OFICINA', tiempo:'10 min',
-      eventos:['Validación del documento de identidad','Firma de recibido','Cierre de la guía'] },
-    novedad_direccion: { nodo:'novedad', titulo:'Novedad: dirección errada', tono:'novedad',
-      descripcion:'La dirección no existe o está incompleta. El centro de novedades contacta al remitente para corregirla o decidir la devolución.',
-      actor:'Mensajero · Centro de novedades', sistema:'Gestión de novedades · Contact center', estado:'NOVEDAD · DIRECCIÓN', tiempo:'Gestión en 24–48 h',
-      eventos:['Reporte de dirección inexistente o incompleta','Contacto con el remitente','Decisión: corregir la dirección o devolver'] },
-    devolucion: { nodo:'devolucion', titulo:'Devolución al remitente', tono:'alerta',
-      descripcion:'La remesa recorre la red en sentido inverso: terminal destino, línea troncal y terminal origen, hasta la dirección del remitente.',
-      actor:'Operación de logística inversa', sistema:'Logística inversa · TMS', estado:'EN DEVOLUCIÓN', tiempo:'Similar al envío original',
-      eventos:['Generación de la guía de retorno','Viaje por la red en sentido inverso','Salida a reparto hacia el remitente'] },
-    devuelta: { nodo:'remitente', titulo:'Devuelta al remitente', tono:'alerta',
-      descripcion:'El remitente recibe de vuelta su paquete y la guía original se cierra como devuelta.',
-      actor:'Remitente · Mensajero', sistema:'App móvil · Prueba de entrega', estado:'DEVUELTA', tiempo:'5 min',
-      eventos:['Entrega al remitente con firma','Cierre de la guía como devuelta','Registro del motivo para reportes'] },
-    entrega_recaudo: { nodo:'destinatario', titulo:'Entrega con recaudo', tono:'ok',
-      descripcion:'Antes de entregar, el mensajero cobra al destinatario el valor del producto en efectivo o por un medio electrónico.',
-      actor:'Destinatario · Mensajero', sistema:'App móvil · Recaudo', estado:'ENTREGADA · RECAUDADA', tiempo:'5–10 min',
-      eventos:['Cobro del valor a recaudar','Registro del medio de pago','Firma, foto y cierre de la guía'] },
-    liquidacion: { nodo:'liquidacion', titulo:'Liquidación al remitente', tono:'ok',
-      descripcion:'El dinero recaudado se concilia en tesorería y se transfiere al remitente, descontando el flete y las comisiones pactadas.',
-      actor:'Tesorería', sistema:'Conciliación de recaudos · ERP', estado:'RECAUDO LIQUIDADO', tiempo:'2–5 días hábiles',
-      eventos:['Consignación del efectivo del mensajero','Conciliación por guía','Transferencia al remitente'] }
+      actor:'Destinatario · Mensajero', modulo:MODULO_POR_DEFINIR, estado:'ENTREGADA', tiempo:'5 min',
+      eventos:['Verificación de quien recibe','Firma digital y foto de evidencia','Cierre de la guía y aviso al remitente'] }
   },
 
   // Escenarios: lista de pasos en orden. Un paso puede ser 'clave' o { ref:'clave', ...cambios }
   // tipo: Entrega | Novedad | Devolución | Recaudo
+  // Por ahora solo está el flujo estándar. Cada bifurcación real se agrega como un escenario nuevo,
+  // con sus nodos, conexiones y pasos propios.
   escenarios: [
     { id:'estandar', nombre:'Entrega estándar', tipo:'Entrega',
       resumen:'Puerta a puerta sin novedades, de la casa del remitente a la del destinatario.',
-      pasos:[...TRAMO_COMUN, 'entrega'] },
-    { id:'reintento', nombre:'Reintento de entrega', tipo:'Novedad',
-      resumen:'El destinatario no está en el primer intento y se le entrega en el segundo.',
-      pasos:[...TRAMO_COMUN, 'novedad_ausente', 'reintento', 'entrega'] },
-    { id:'oficina', nombre:'Retenida en oficina', tipo:'Novedad',
-      resumen:'Tras dos intentos fallidos, el destinatario reclama el paquete en la oficina destino.',
-      pasos:[...TRAMO_COMUN, 'novedad_ausente', 'reintento',
-        { ref:'novedad_ausente', titulo:'Segunda novedad: ausente',
-          eventos:['Registro del segundo intento fallido','Se agotan los intentos de entrega','Traslado de la remesa a oficina'] },
-        'oficina_dest', 'reclamo'] },
-    { id:'direccion', nombre:'Dirección corregida', tipo:'Novedad',
-      resumen:'La dirección está errada; el remitente la corrige y la remesa se entrega.',
-      pasos:[...TRAMO_COMUN, 'novedad_direccion',
-        { ref:'reintento', titulo:'Reparto con dirección corregida',
-          descripcion:'Con la dirección validada por el remitente, la remesa sale de nuevo a reparto.',
-          estado:'EN REPARTO · DIRECCIÓN CORREGIDA',
-          eventos:['Actualización de la dirección en la guía','Reasignación a la ruta correcta','Llegada a la nueva dirección'] },
-        'entrega'] },
-    { id:'devolucion', nombre:'Devolución', tipo:'Devolución',
-      resumen:'La dirección no se puede corregir y el paquete vuelve al remitente por la red inversa.',
-      pasos:[...TRAMO_COMUN, 'novedad_direccion', 'devolucion', 'devuelta'] },
-    { id:'recaudo', nombre:'Pago contraentrega', tipo:'Recaudo',
-      resumen:'El destinatario paga al recibir y el dinero se liquida al remitente.',
-      pasos:[...TRAMO_COMUN, 'entrega_recaudo', 'liquidacion'] },
-    { id:'punto', nombre:'Envío desde oficina', tipo:'Entrega',
-      resumen:'El remitente lleva el paquete a una oficina en lugar de pedir recolección.',
-      pasos:['preparacion', 'punto_venta', 'admision', 'clasificacion', 'troncal', 'terminal_dest', 'reparto', 'entrega'] }
+      pasos:[...TRAMO_COMUN, 'entrega'] }
   ]
 };
 
@@ -533,6 +483,8 @@ const ICONOS = {
 
   // ---- Construir el mapa
   const svg = $('#mapa');
+  const ALTO = (FLUJO.lienzo && FLUJO.lienzo.alto) || 460;
+  svg.setAttribute('viewBox', `0 0 1240 ${ALTO}`);
   const defs = el('defs', {}, svg);
   [['flecha','arr'], ['flecha-hecha','arr done']].forEach(([id, cls]) => {
     const m = el('marker', { id, viewBox:'0 0 10 10', refX:'7', refY:'5', markerWidth:'6', markerHeight:'6', orient:'auto-start-reverse' }, defs);
@@ -541,7 +493,7 @@ const ICONOS = {
   const gB = el('g', {}, svg), gE = el('g', {}, svg), gO = el('g', {}, svg), gN = el('g', {}, svg);
 
   FLUJO.carriles.forEach((c, k) => {
-    el('rect', { x:c.x0, y:8, width:c.x1 - c.x0, height:444, rx:10, class:'band' + (k % 2 ? ' alt' : '') }, gB);
+    el('rect', { x:c.x0, y:8, width:c.x1 - c.x0, height:ALTO - 16, rx:10, class:'band' + (k % 2 ? ' alt' : '') }, gB);
     el('text', { x:c.x0 + 14, y:32, class:'band-label' }, gB).textContent = c.nombre.toUpperCase();
   });
 
@@ -694,9 +646,13 @@ const ICONOS = {
     $('#etapa-titulo').textContent = p.titulo || '';
     $('#etapa-desc').textContent = p.descripcion || '';
     $('#f-actor').textContent = p.actor || '—';
-    $('#f-sistema').textContent = p.sistema || '—';
     $('#f-tiempo').textContent = p.tiempo || '—';
-    const pill = $('#f-estado'); pill.textContent = p.estado || '—'; pill.dataset.tono = p.tono;
+    $('#f-estado').textContent = p.estado || '—';
+    $('#estado-caja').dataset.tono = p.tono;
+    $('#f-previo').textContent = i > 0 ? `Antes: ${ps[i-1].estado || '—'}` : 'Estado inicial de la remesa';
+    const modulo = p.modulo || MODULO_POR_DEFINIR;
+    $('#f-modulo').textContent = modulo;
+    $('#modulo-caja').dataset.pendiente = String(modulo === MODULO_POR_DEFINIR);
     $('#ev-lista').innerHTML = (p.eventos || []).map(e => `<li class="ev"><span class="ev-marca" aria-hidden="true"></span><span>${esc(e)}</span></li>`).join('');
     const art = $('#etapa'); art.classList.remove('entra'); void art.offsetWidth; art.classList.add('entra');
   }
